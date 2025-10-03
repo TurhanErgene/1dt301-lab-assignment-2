@@ -1,31 +1,32 @@
+@
+@ R0 - first parameter to printf
+@ R1 - second parameter to printer
+@ R7 - index counter
+@
+
+.thumb_func                 @ Necessary because sdk uses BLX
+.global main                @ Provide program starting address to linker
 .syntax unified
 .thumb
-.text
-
-.global main
-.type   main, %function
-.thumb_func
+.extern printf
+.extern stdio_init_all
 
 main:
-    bl  stdio_init_all
-    ldr r0, =2000
-    bl  sleep_ms
-    movs r7, #100
+   MOVS    R7, #100        @ initialize counter to 100
+   BL  stdio_init_all      @ initialize uart or usb
 
 loop:
-    movs r1, r7
-    ldr r0, =helloworld
-    bl  printf
-    cmp r7, #0
-    bne 1f
-    movs r7, #100
-    b   loop
-1:  subs r7, r7, #1
-    b   loop
-    .size main, .-main
+   LDR R0, =helloworld     @ load address of helloworld string
+   MOVS    R1, R7          @ Move the counter to second parameter = counter
+   BL  printf              @ Call pico_printf
+      
+   SUBS    R7, R7, #1      @ decrement counter
+   BNE loop
+  
+   MOVS R7, #100          /* reset back to 100 */
+   B   loop                @ loop forever~~~
+      
+.data
+          .align  4        @ necessary alignment
+helloworld: .asciz   "Hello World %d\n"
 
-    .section .rodata
-    .align 4
-
-helloworld:
-    .asciz "Hello World %d\n"
